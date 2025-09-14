@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
@@ -107,39 +105,36 @@ export type Database = {
         }
         Relationships: []
       }
-      usuarios_dashboard: {
+      users: {
         Row: {
-          created_at: string
-          email: string
           id: string
-          is_active: boolean
-          last_login_at: string | null
-          nome: string
-          role: string
-          updated_at: string
           user_id: string
+          email: string
+          name: string
+          role: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string
-          email: string
           id?: string
-          is_active?: boolean
-          last_login_at?: string | null
-          nome: string
-          role?: string
-          updated_at?: string
           user_id: string
+          email: string
+          name: string
+          role?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string
-          email?: string
           id?: string
-          is_active?: boolean
-          last_login_at?: string | null
-          nome?: string
-          role?: string
-          updated_at?: string
           user_id?: string
+          email?: string
+          name?: string
+          role?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -192,14 +187,6 @@ export type Database = {
       get_total_leads: {
         Args: Record<PropertyKey, never>
         Returns: number
-      }
-      is_user_active: {
-        Args: { user_uuid: string }
-        Returns: boolean
-      }
-      update_last_login: {
-        Args: { user_uuid: string }
-        Returns: undefined
       }
     }
     Enums: {

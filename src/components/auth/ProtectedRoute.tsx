@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,8 +10,9 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, profile, loading, isAdmin, isActive, refreshProfile } = useAuth();
+  const { user, profile, loading, isAdmin, isActive, isAuthenticated, refreshProfile } = useAuth();
 
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -22,74 +24,123 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
+  // Usuário não autenticado
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Se o usuário existe mas não tem profile, mostra erro
+  // Usuário autenticado mas sem perfil
   if (user && !profile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">Erro no Perfil</h2>
-          <p className="text-muted-foreground">Não foi possível carregar o perfil do usuário.</p>
+        <div className="text-center space-y-6 max-w-md mx-auto p-6">
+          <div className="flex justify-center">
+            <AlertCircle className="w-12 h-12 text-red-500" />
+          </div>
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Usuário: {user?.email}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Profile: Não encontrado
+            <h2 className="text-xl font-semibold text-foreground">Perfil Não Encontrado</h2>
+            <p className="text-muted-foreground">
+              Não foi possível carregar o perfil do usuário. Isso pode acontecer se o usuário foi criado diretamente no Supabase Auth.
             </p>
           </div>
-          <button 
-            onClick={() => refreshProfile()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Tentar Novamente
-          </button>
+          <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
+            <p><strong>Email:</strong> {user?.email}</p>
+            <p><strong>Status:</strong> Perfil não encontrado</p>
+          </div>
+          <div className="space-y-2">
+            <Button 
+              onClick={() => refreshProfile()}
+              className="w-full"
+              variant="default"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Tentar Novamente
+            </Button>
+            <Button 
+              onClick={() => window.location.href = '/auth'}
+              variant="outline"
+              className="w-full"
+            >
+              Voltar ao Login
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!isActive()) {
+  // Usuário com perfil mas inativo
+  if (profile && !isActive()) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">Acesso Negado</h2>
-          <p className="text-muted-foreground">Sua conta está inativa. Entre em contato com o administrador.</p>
+        <div className="text-center space-y-6 max-w-md mx-auto p-6">
+          <div className="flex justify-center">
+            <AlertCircle className="w-12 h-12 text-yellow-500" />
+          </div>
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Usuário: {user?.email}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Profile: {profile ? 'Carregado' : 'Não encontrado'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Ativo: {profile?.is_active ? 'Sim' : 'Não'}
+            <h2 className="text-xl font-semibold text-foreground">Conta Inativa</h2>
+            <p className="text-muted-foreground">
+              Sua conta está inativa. Entre em contato com o administrador para reativar.
             </p>
           </div>
-          <button 
-            onClick={() => refreshProfile()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Tentar Novamente
-          </button>
+          <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
+            <p><strong>Nome:</strong> {profile.name}</p>
+            <p><strong>Email:</strong> {profile.email}</p>
+            <p><strong>Role:</strong> {profile.role}</p>
+            <p><strong>Status:</strong> Inativo</p>
+          </div>
+          <div className="space-y-2">
+            <Button 
+              onClick={() => refreshProfile()}
+              className="w-full"
+              variant="default"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Verificar Status
+            </Button>
+            <Button 
+              onClick={() => window.location.href = '/auth'}
+              variant="outline"
+              className="w-full"
+            >
+              Fazer Logout
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
+  // Verificar permissões de admin
   if (requireAdmin && !isAdmin()) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">Acesso Restrito</h2>
-          <p className="text-muted-foreground">Você não tem permissão para acessar esta área.</p>
+        <div className="text-center space-y-6 max-w-md mx-auto p-6">
+          <div className="flex justify-center">
+            <AlertCircle className="w-12 h-12 text-red-500" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Acesso Restrito</h2>
+            <p className="text-muted-foreground">
+              Você não tem permissão para acessar esta área. Apenas administradores podem acessar.
+            </p>
+          </div>
+          <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
+            <p><strong>Nome:</strong> {profile?.name}</p>
+            <p><strong>Role:</strong> {profile?.role}</p>
+          </div>
+          <Button 
+            onClick={() => window.location.href = '/dashboard'}
+            className="w-full"
+            variant="default"
+          >
+            Voltar ao Dashboard
+          </Button>
         </div>
       </div>
     );
   }
 
+  // Usuário autenticado e autorizado
   return <>{children}</>;
 };

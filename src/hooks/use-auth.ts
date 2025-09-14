@@ -2,16 +2,16 @@ import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+// Interface simplificada para o perfil do usuário
 interface UserProfile {
   id: string;
   user_id: string;
-  nome: string;
   email: string;
+  name: string;
   role: 'admin' | 'user';
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  last_login_at?: string;
 }
 
 export const useAuth = () => {
@@ -20,12 +20,33 @@ export const useAuth = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Função para carregar o perfil do usuário
+  const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error loading user profile:', error);
+        return null;
+      }
+
+      return data as UserProfile;
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
       try {
-        // Get current session
+        // Obter sessão atual
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!mounted) return;
@@ -34,15 +55,11 @@ export const useAuth = () => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Load profile
-          const { data: profileData } = await supabase
-            .from('usuarios_dashboard')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
+          // Carregar perfil do usuário
+          const profileData = await loadUserProfile(session.user.id);
           
           if (mounted) {
-            setProfile(profileData as UserProfile);
+            setProfile(profileData);
           }
         } else {
           setProfile(null);
@@ -61,7 +78,7 @@ export const useAuth = () => {
 
     initializeAuth();
 
-    // Set up auth state listener
+    // Configurar listener de mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
@@ -70,15 +87,11 @@ export const useAuth = () => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Load profile
-          const { data: profileData } = await supabase
-            .from('usuarios_dashboard')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
+          // Carregar perfil do usuário
+          const profileData = await loadUserProfile(session.user.id);
           
           if (mounted) {
-            setProfile(profileData as UserProfile);
+            setProfile(profileData);
           }
         } else {
           setProfile(null);
@@ -96,6 +109,7 @@ export const useAuth = () => {
     };
   }, []);
 
+  // Função para fazer logout
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (!error) {
@@ -106,26 +120,27 @@ export const useAuth = () => {
     return { error };
   };
 
-  const isAdmin = () => {
-    return profile?.role === 'admin' && profile?.is_active;
+  // Verificar se o usuário é admin
+  const isAdmin = (): boolean => {
+    return profile?.role === 'admin' && profile?.is_active === true;
   };
 
-  const isActive = () => {
-    return profile?.is_active ?? false;
+  // Verificar se o usuário está ativo
+  const isActive = (): boolean => {
+    return profile?.is_active === true;
   };
 
-  const refreshProfile = async () => {
+  // Recarregar perfil do usuário
+  const refreshProfile = async (): Promise<void> => {
     if (user) {
-      const { data: profileData } = await supabase
-        .from('usuarios_dashboard')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (profileData) {
-        setProfile(profileData as UserProfile);
-      }
+      const profileData = await loadUserProfile(user.id);
+      setProfile(profileData);
     }
+  };
+
+  // Verificar se o usuário está autenticado
+  const isAuthenticated = (): boolean => {
+    return !!user && !!profile && isActive();
   };
 
   return {
@@ -136,6 +151,7 @@ export const useAuth = () => {
     signOut,
     isAdmin,
     isActive,
+    isAuthenticated,
     refreshProfile,
   };
 };
