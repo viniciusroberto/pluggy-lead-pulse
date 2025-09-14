@@ -143,3 +143,49 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .bg-gradient-premium {
+    @apply bg-gradient-primary;
+  }
+
+  .bg-gradient-dark {
+    background: var(--gradient-dark);
+  }
+
+  .bg-gradient-glass {
+    background: var(--gradient-glass);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-glass {
+    box-shadow: var(--shadow-glass);
+  }
+
+  .border-glass {
+    @apply border-white/20;
+  }
+
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md shadow-glass border-glass;
+  }
+
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .button-premium {
+    @apply bg-gradient-premium text-white border-0 hover:shadow-glow transition-smooth hover:scale-105;
+  }
+
+  .glass-input {
+    @apply bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white/40 focus:ring-white/20;
+  }
+
+  .glass-button {
+    @apply bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30;
+  }
+}

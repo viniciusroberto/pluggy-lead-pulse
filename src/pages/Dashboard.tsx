@@ -7,8 +7,14 @@ import {
   MessageSquare,
   CheckCircle,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  LogOut,
+  Settings
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { UserManagement } from "@/components/admin/UserManagement";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 import { MetricCard } from "@/components/ui/metric-card";
 import { FilterBar } from "@/components/ui/filter-bar";
@@ -30,9 +36,23 @@ const Dashboard = () => {
     interaction: null,
     tamanho: null,
   });
+  const [showUserManagement, setShowUserManagement] = useState(false);
 
   const { data, loading, error } = useDashboardData(filters);
   const filterOptions = useFilterOptions();
+  const { profile, signOut, isAdmin } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Erro ao sair",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -78,19 +98,51 @@ const Dashboard = () => {
             <p className="text-muted-foreground">
               Monitoramento da operação de qualificação Pluggy
             </p>
+            {profile && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Bem-vindo, {profile.nome} ({profile.role === 'admin' ? 'Admin' : 'Usuário'})
+              </p>
+            )}
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-            Dados atualizados em tempo real
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
+              Dados atualizados em tempo real
+            </div>
+            <div className="flex gap-2">
+              {isAdmin() && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowUserManagement(!showUserManagement)}
+                  className="glass-button"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  {showUserManagement ? 'Dashboard' : 'Usuários'}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={handleSignOut}
+                className="glass-button"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Filters */}
-        <FilterBar 
-          filters={filters} 
-          onFiltersChange={setFilters}
-          options={filterOptions}
-        />
+        {/* Admin User Management */}
+        {showUserManagement && isAdmin() ? (
+          <UserManagement />
+        ) : (
+          <>
+            {/* Filters */}
+            <FilterBar 
+              filters={filters} 
+              onFiltersChange={setFilters}
+              options={filterOptions}
+            />
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -179,14 +231,16 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Pending Leads Table */}
-        <PendingLeadsTable 
-          leads={data.pendingLeads}
-          onExport={() => {
-            // Implement CSV export
-            console.log('Exporting pending leads...');
-          }}
-        />
+            {/* Pending Leads Table */}
+            <PendingLeadsTable 
+              leads={data.pendingLeads}
+              onExport={() => {
+                // Implement CSV export
+                console.log('Exporting pending leads...');
+              }}
+            />
+          </>
+        )}
       </div>
     </div>
   );
