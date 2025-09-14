@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { CalendarDays, Filter } from "lucide-react";
+import { CalendarDays, Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { DateRangePicker } from "./date-range-picker";
 
 interface FilterBarProps {
   filters: {
@@ -12,11 +13,12 @@ interface FilterBarProps {
     atividade: string[];
     solucao: string[];
     hubspot: boolean | null;
-    followup: boolean | null;
+    followup: number | null;
     interaction: string | null;
     tamanho: string | null;
   };
   onFiltersChange: (filters: any) => void;
+  onSearch: () => void;
   options: {
     origens: string[];
     atividades: string[];
@@ -24,7 +26,7 @@ interface FilterBarProps {
   };
 }
 
-export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps) {
+export function FilterBar({ filters, onFiltersChange, onSearch, options }: FilterBarProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   
   const clearFilters = () => {
@@ -83,26 +85,14 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Período</label>
-          <div className="flex gap-2">
-            <input
-              type="date"
-              value={filters.dateRange.start}
-              onChange={(e) => onFiltersChange({
-                ...filters,
-                dateRange: { ...filters.dateRange, start: e.target.value }
-              })}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
-            <input
-              type="date"
-              value={filters.dateRange.end}
-              onChange={(e) => onFiltersChange({
-                ...filters,
-                dateRange: { ...filters.dateRange, end: e.target.value }
-              })}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
-          </div>
+          <DateRangePicker
+            startDate={filters.dateRange.start}
+            endDate={filters.dateRange.end}
+            onDateChange={(start, end) => onFiltersChange({
+              ...filters,
+              dateRange: { start, end }
+            })}
+          />
         </div>
 
         <div className="space-y-2">
@@ -149,23 +139,29 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
 
         <div className="space-y-2">
           <label className="text-sm font-medium">Solução</label>
-          <Select
-            value={filters.solucao[0] || "all"}
-            onValueChange={(value) => onFiltersChange({
-              ...filters,
-              solucao: value === "all" ? [] : [value]
-            })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Todas as soluções" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as soluções</SelectItem>
-              {options.solucoes.map((solucao) => (
-                <SelectItem key={solucao} value={solucao}>{solucao}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select
+              value={filters.solucao[0] || "all"}
+              onValueChange={(value) => onFiltersChange({
+                ...filters,
+                solucao: value === "all" ? [] : [value]
+              })}
+            >
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Todas as soluções" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as soluções</SelectItem>
+                {options.solucoes.map((solucao) => (
+                  <SelectItem key={solucao} value={solucao}>{solucao}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={onSearch} className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Pesquisar
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -197,7 +193,7 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
               value={filters.followup === null ? "all" : filters.followup.toString()}
               onValueChange={(value) => onFiltersChange({
                 ...filters,
-                followup: value === "all" ? null : value === "true"
+                followup: value === "all" ? null : parseInt(value)
               })}
             >
               <SelectTrigger>
@@ -205,8 +201,9 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="true">Pendente</SelectItem>
-                <SelectItem value="false">Concluído</SelectItem>
+                <SelectItem value="1">Follow-up 1</SelectItem>
+                <SelectItem value="2">Follow-up 2</SelectItem>
+                <SelectItem value="3">Follow-up 3</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -255,6 +252,7 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
           </div>
         </div>
       )}
+
     </Card>
   );
 }

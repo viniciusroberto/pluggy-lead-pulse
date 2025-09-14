@@ -1,32 +1,31 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface NPSGaugeProps {
   score: number;
-  promoters: number;
-  passives: number;
-  detractors: number;
+  satisfeitos: number; // Score 5
+  neutros: number;     // Score 1-4
+  distribuicao: Array<{ score: number; quantidade: number }>; // Distribuição de 1 a 5
 }
 
-export function NPSGauge({ score, promoters, passives, detractors }: NPSGaugeProps) {
-  const total = promoters + passives + detractors;
+export function NPSGauge({ score, satisfeitos, neutros, distribuicao }: NPSGaugeProps) {
+  const total = satisfeitos + neutros;
   
   const data = [
-    { name: 'Promotores', value: promoters, color: 'hsl(var(--success))' },
-    { name: 'Passivos', value: passives, color: 'hsl(var(--warning))' },
-    { name: 'Detratores', value: detractors, color: 'hsl(var(--danger))' },
+    { name: 'Satisfeitos', value: satisfeitos, color: 'hsl(var(--success))' },
+    { name: 'Neutros', value: neutros, color: 'hsl(var(--warning))' },
   ].filter(item => item.value > 0);
 
   const getScoreColor = (score: number) => {
-    if (score >= 50) return 'text-success';
-    if (score >= 0) return 'text-warning';
+    if (score >= 80) return 'text-success';
+    if (score >= 50) return 'text-warning';
     return 'text-danger';
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 50) return 'Excelente';
-    if (score >= 0) return 'Zona de Melhoria';
-    return 'Crítico';
+    if (score >= 80) return 'Excelente';
+    if (score >= 50) return 'Bom';
+    return 'Precisa Melhorar';
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -48,7 +47,7 @@ export function NPSGauge({ score, promoters, passives, detractors }: NPSGaugePro
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Net Promoter Score</CardTitle>
+        <CardTitle>Avaliação Clientes</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between">
@@ -87,22 +86,21 @@ export function NPSGauge({ score, promoters, passives, detractors }: NPSGaugePro
           )}
         </div>
         
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <div className="text-center">
-            <div className="text-lg font-semibold text-success">{promoters}</div>
-            <div className="text-xs text-muted-foreground">Promotores</div>
-            <div className="text-xs text-success">Score 9-10</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-semibold text-warning">{passives}</div>
-            <div className="text-xs text-muted-foreground">Passivos</div>
-            <div className="text-xs text-warning">Score 7-8</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-semibold text-danger">{detractors}</div>
-            <div className="text-xs text-muted-foreground">Detratores</div>
-            <div className="text-xs text-danger">Score 0-6</div>
-          </div>
+        {/* Legenda com barras clean - similar ao Status de Validação */}
+        <div className="grid grid-cols-5 gap-4 mt-4 pt-4 border-t">
+          {distribuicao.map((item) => (
+            <div key={item.score} className="text-center">
+              <div 
+                className="w-3 h-3 rounded-full mx-auto mb-1"
+                style={{ 
+                  backgroundColor: item.score === 5 ? '#10B981' : 
+                                 item.score >= 3 ? '#F59E0B' : '#EF4444'
+                }}
+              ></div>
+              <p className="text-sm font-medium">{item.quantidade}</p>
+              <p className="text-xs text-muted-foreground">Score {item.score}</p>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

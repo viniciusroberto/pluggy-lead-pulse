@@ -105,6 +105,47 @@ export type Database = {
         }
         Relationships: []
       }
+      conversa_validacao: {
+        Row: {
+          id: string
+          telefone: number
+          validada: boolean
+          observacoes: string | null
+          validado_por: string | null
+          validado_em: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          telefone: number
+          validada?: boolean
+          observacoes?: string | null
+          validado_por?: string | null
+          validado_em?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          telefone?: number
+          validada?: boolean
+          observacoes?: string | null
+          validado_por?: string | null
+          validado_em?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversa_validacao_validado_por_fkey"
+            columns: ["validado_por"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       users: {
         Row: {
           id: string

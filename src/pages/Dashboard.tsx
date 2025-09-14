@@ -18,12 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 
 import { MetricCard } from "@/components/ui/metric-card";
 import { FilterBar } from "@/components/ui/filter-bar";
-import { FunnelChart } from "@/components/charts/funnel-chart";
-import { TimelineChart } from "@/components/charts/timeline-chart";
-import { DistributionChart } from "@/components/charts/distribution-chart";
 import { NPSGauge } from "@/components/charts/nps-gauge";
+import { ValidationStatusChart } from "@/components/charts/validation-status-chart";
 import { PendingLeadsTable } from "@/components/tables/pending-leads-table";
-import { useDashboardData, useFilterOptions, DashboardFilters } from "@/hooks/use-dashboard-data";
+import { useDashboardData, useFilterOptions, DashboardFilters, formatQualificationTime } from "@/hooks/use-dashboard-data";
 
 const Dashboard = () => {
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -141,6 +139,10 @@ const Dashboard = () => {
             <FilterBar 
               filters={filters} 
               onFiltersChange={setFilters}
+              onSearch={() => {
+                // A busca já é automática quando os filtros mudam
+                console.log('Pesquisando com filtros:', filters);
+              }}
               options={filterOptions}
             />
 
@@ -153,11 +155,10 @@ const Dashboard = () => {
             variant="default"
           />
           <MetricCard
-            title="Leads Qualificados"
-            value={data.qualifiedLeads.toLocaleString()}
-            change={{ value: data.qualificationRate, percentage: true }}
-            icon={<Target className="h-6 w-6" />}
-            variant="success"
+            title="Total de Mensagens"
+            value={data.totalMessages.toLocaleString()}
+            icon={<MessageSquare className="h-6 w-6" />}
+            variant="default"
           />
           <MetricCard
             title="Follow-ups Pendentes"
@@ -177,67 +178,21 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <MetricCard
             title="Tempo Médio Qualificação"
-            value={`${data.avgQualificationTime}min`}
+            value={formatQualificationTime(data.avgQualificationTime)}
             icon={<Clock className="h-6 w-6" />}
           />
-          <MetricCard
-            title="Mensagens IA vs Humano"
-            value={`${Math.round((data.iaVsHuman.ia / (data.iaVsHuman.ia + data.iaVsHuman.human)) * 100)}% IA`}
-            icon={<MessageSquare className="h-6 w-6" />}
-            variant="default"
-          />
+          <ValidationStatusChart data={data.validationStatusData} />
           <NPSGauge
             score={data.npsScore}
-            promoters={data.promoters}
-            passives={data.passives}
-            detractors={data.detractors}
+            satisfeitos={data.satisfeitos}
+            neutros={data.neutros}
+            distribuicao={data.distribuicaoAvaliacoes}
           />
         </div>
 
-        {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TimelineChart data={data.dailyLeads} />
-          <FunnelChart 
-            data={data.funnelData}
-            onStageClick={(stage) => {
-              console.log('Stage clicked:', stage);
-              // Implement drill-down functionality
-            }}
-          />
-        </div>
-
-        {/* Charts Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <DistributionChart
-            data={data.distributionData.origem}
-            title="Distribuição por Origem"
-            onItemClick={(item) => {
-              setFilters({ ...filters, origem: [item] });
-            }}
-          />
-          <DistributionChart
-            data={data.distributionData.atividade}
-            title="Distribuição por Atividade"
-            onItemClick={(item) => {
-              setFilters({ ...filters, atividade: [item] });
-            }}
-          />
-          <DistributionChart
-            data={data.distributionData.solucao}
-            title="Distribuição por Solução"
-            onItemClick={(item) => {
-              setFilters({ ...filters, solucao: [item] });
-            }}
-          />
-        </div>
-
-            {/* Pending Leads Table */}
+            {/* Validação dos Leads Table */}
             <PendingLeadsTable 
               leads={data.pendingLeads}
-              onExport={() => {
-                // Implement CSV export
-                console.log('Exporting pending leads...');
-              }}
             />
           </>
         )}
@@ -247,3 +202,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
