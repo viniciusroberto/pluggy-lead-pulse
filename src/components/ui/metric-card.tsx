@@ -28,6 +28,13 @@ export function MetricCard({
     danger: "bg-gradient-danger"
   };
 
+  const glowVariants = {
+    default: "shadow-glow",
+    success: "shadow-glow", 
+    warning: "shadow-glow",
+    danger: "shadow-glow"
+  };
+
   const getChangeColor = (value: number) => {
     if (value > 0) return "text-success";
     if (value < 0) return "text-danger";
@@ -36,7 +43,8 @@ export function MetricCard({
 
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-lg border bg-card p-6 shadow-md transition-all hover:shadow-lg",
+      "relative overflow-hidden rounded-xl border bg-card/60 backdrop-blur-sm p-6 shadow-glass transition-all hover:shadow-glow hover:bg-card/80",
+      glowVariants[variant],
       className
     )}>
       <div className="flex items-center justify-between">
@@ -51,10 +59,10 @@ export function MetricCard({
         </div>
         {icon && (
           <div className={cn(
-            "rounded-full p-3",
+            "rounded-xl p-3 shadow-glow backdrop-blur-sm",
             variants[variant]
           )}>
-            <div className="text-white">
+            <div className="text-white drop-shadow-lg">
               {icon}
             </div>
           </div>
@@ -63,9 +71,12 @@ export function MetricCard({
       
       {/* Gradient overlay */}
       <div className={cn(
-        "absolute inset-0 opacity-5",
+        "absolute inset-0 opacity-10 rounded-xl",
         variants[variant]
       )} />
+      
+      {/* Glass effect border */}
+      <div className="absolute inset-0 rounded-xl border border-white/10" />
     </div>
   );
 }
