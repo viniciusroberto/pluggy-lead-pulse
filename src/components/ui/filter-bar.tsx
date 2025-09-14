@@ -108,17 +108,17 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
         <div className="space-y-2">
           <label className="text-sm font-medium">Origem</label>
           <Select
-            value={filters.origem[0] || ""}
+            value={filters.origem[0] || "all"}
             onValueChange={(value) => onFiltersChange({
               ...filters,
-              origem: value ? [value] : []
+              origem: value === "all" ? [] : [value]
             })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Todas as origens" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as origens</SelectItem>
+              <SelectItem value="all">Todas as origens</SelectItem>
               {options.origens.map((origem) => (
                 <SelectItem key={origem} value={origem}>{origem}</SelectItem>
               ))}
@@ -129,17 +129,17 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
         <div className="space-y-2">
           <label className="text-sm font-medium">Atividade</label>
           <Select
-            value={filters.atividade[0] || ""}
+            value={filters.atividade[0] || "all"}
             onValueChange={(value) => onFiltersChange({
               ...filters,
-              atividade: value ? [value] : []
+              atividade: value === "all" ? [] : [value]
             })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Todas as atividades" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as atividades</SelectItem>
+              <SelectItem value="all">Todas as atividades</SelectItem>
               {options.atividades.map((atividade) => (
                 <SelectItem key={atividade} value={atividade}>{atividade}</SelectItem>
               ))}
@@ -150,17 +150,17 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
         <div className="space-y-2">
           <label className="text-sm font-medium">Solução</label>
           <Select
-            value={filters.solucao[0] || ""}
+            value={filters.solucao[0] || "all"}
             onValueChange={(value) => onFiltersChange({
               ...filters,
-              solucao: value ? [value] : []
+              solucao: value === "all" ? [] : [value]
             })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Todas as soluções" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as soluções</SelectItem>
+              <SelectItem value="all">Todas as soluções</SelectItem>
               {options.solucoes.map((solucao) => (
                 <SelectItem key={solucao} value={solucao}>{solucao}</SelectItem>
               ))}
@@ -174,17 +174,17 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
           <div className="space-y-2">
             <label className="text-sm font-medium">HubSpot</label>
             <Select
-              value={filters.hubspot === null ? "" : filters.hubspot.toString()}
+              value={filters.hubspot === null ? "all" : filters.hubspot.toString()}
               onValueChange={(value) => onFiltersChange({
                 ...filters,
-                hubspot: value === "" ? null : value === "true"
+                hubspot: value === "all" ? null : value === "true"
               })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="true">Criado no HubSpot</SelectItem>
                 <SelectItem value="false">Não criado</SelectItem>
               </SelectContent>
@@ -194,17 +194,17 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
           <div className="space-y-2">
             <label className="text-sm font-medium">Follow-up</label>
             <Select
-              value={filters.followup === null ? "" : filters.followup.toString()}
+              value={filters.followup === null ? "all" : filters.followup.toString()}
               onValueChange={(value) => onFiltersChange({
                 ...filters,
-                followup: value === "" ? null : value === "true"
+                followup: value === "all" ? null : value === "true"
               })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="true">Pendente</SelectItem>
                 <SelectItem value="false">Concluído</SelectItem>
               </SelectContent>
@@ -214,17 +214,17 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
           <div className="space-y-2">
             <label className="text-sm font-medium">Interação</label>
             <Select
-              value={filters.interaction || ""}
+              value={filters.interaction || "all"}
               onValueChange={(value) => onFiltersChange({
                 ...filters,
-                interaction: value || null
+                interaction: value === "all" ? null : value
               })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todas" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="ia">IA</SelectItem>
                 <SelectItem value="human">Humano</SelectItem>
               </SelectContent>
@@ -234,17 +234,17 @@ export function FilterBar({ filters, onFiltersChange, options }: FilterBarProps)
           <div className="space-y-2">
             <label className="text-sm font-medium">Tamanho</label>
             <Select
-              value={filters.tamanho || ""}
+              value={filters.tamanho || "all"}
               onValueChange={(value) => onFiltersChange({
                 ...filters,
-                tamanho: value || null
+                tamanho: value === "all" ? null : value
               })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="1-10">1-10</SelectItem>
                 <SelectItem value="11-50">11-50</SelectItem>
                 <SelectItem value="51-200">51-200</SelectItem>
