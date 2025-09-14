@@ -44,18 +44,19 @@ const Auth = () => {
           description: error.message,
           variant: "destructive",
         });
+        setLoading(false);
         return;
       }
 
       if (data.user) {
-        // Update last login
-        await supabase.rpc('update_last_login', { user_uuid: data.user.id });
-        
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo ao Dashboard Pluggy",
         });
+        
+        // Navegar imediatamente, sem esperar update_last_login
         navigate("/dashboard");
+        setLoading(false);
       }
     } catch (error: any) {
       toast({
@@ -63,7 +64,6 @@ const Auth = () => {
         description: error.message,
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
