@@ -29,8 +29,14 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/auth" replace />;
   }
 
-  // Usuário autenticado mas sem perfil
+  // Usuário autenticado mas sem perfil - permitir acesso básico
   if (user && !profile) {
+    // Se não requer admin, permitir acesso mesmo sem perfil
+    if (!requireAdmin) {
+      return <>{children}</>;
+    }
+    
+    // Se requer admin mas não tem perfil, negar acesso
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-6 max-w-md mx-auto p-6">
@@ -38,9 +44,9 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
             <AlertCircle className="w-12 h-12 text-red-500" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">Perfil Não Encontrado</h2>
+            <h2 className="text-xl font-semibold text-foreground">Acesso Restrito</h2>
             <p className="text-muted-foreground">
-              Não foi possível carregar o perfil do usuário. Isso pode acontecer se o usuário foi criado diretamente no Supabase Auth.
+              Esta área requer permissões de administrador. Seu perfil não foi encontrado no sistema.
             </p>
           </div>
           <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
