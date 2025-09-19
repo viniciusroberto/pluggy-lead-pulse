@@ -144,29 +144,41 @@ export function useDashboardData(filters: DashboardFilters) {
         console.log('Data do primeiro lead:', leads[0].data_criacao);
       }
 
-      // Get validation status for each lead
-      const leadsWithValidation = await Promise.all(
-        (leads || []).map(async (lead) => {
-          try {
-            const { data: validation } = await supabase
-              .from('conversa_validacao')
-              .select('validada')
-              .eq('telefone', lead.telefone)
-              .single();
+      // Get validation status for all leads in a single query (FIXED N+1 problem)
+      let leadsWithValidation = leads || [];
+      
+      if (leads && leads.length > 0) {
+        const telefones = leads.map(lead => lead.telefone);
+        
+        // Single query to get all validations at once
+        const { data: validations, error: validationsError } = await supabase
+          .from('conversa_validacao')
+          .select('telefone, validada')
+          .in('telefone', telefones);
 
+        if (!validationsError && validations) {
+          // Create a map for O(1) lookup
+          const validationMap = new Map(
+            validations.map(v => [v.telefone, v.validada])
+          );
+
+          // Apply validation status to leads
+          leadsWithValidation = leads.map(lead => {
+            const validada = validationMap.get(lead.telefone);
             return {
               ...lead,
-              validacao_status: validation?.validada === true ? 'validada' : 
-                               validation?.validada === false ? 'invalida' : 'pendente'
+              validacao_status: validada === true ? 'validada' : 
+                               validada === false ? 'invalida' : 'pendente'
             };
-          } catch {
-            return {
-              ...lead,
-              validacao_status: 'pendente' as const
-            };
-          }
-        })
-      );
+          });
+        } else {
+          // If validation query fails, set all as pending
+          leadsWithValidation = leads.map(lead => ({
+            ...lead,
+            validacao_status: 'pendente' as const
+          }));
+        }
+      }
 
       // Count total messages from chat_pluggy based on filtered leads
       let totalMessages = 0;

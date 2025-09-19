@@ -8,6 +8,7 @@ import { MessageCircle, User, Bot, Phone, Calendar, Mail, CheckCircle, XCircle, 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { MessageBubble } from "@/components/ui/message-bubble";
 
 interface ChatMessage {
   id: number;
@@ -187,38 +188,6 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
     });
   };
 
-  const getMessageTypeIcon = (tipo: string | null) => {
-    switch (tipo) {
-      case 'ia':
-        return <Bot className="h-4 w-4" />;
-      case 'human':
-        return <User className="h-4 w-4" />;
-      default:
-        return <MessageCircle className="h-4 w-4" />;
-    }
-  };
-
-  const getMessageTypeColor = (tipo: string | null) => {
-    switch (tipo) {
-      case 'ia':
-        return 'bg-blue-50 text-blue-900 border-blue-200';
-      case 'human':
-        return 'bg-green-50 text-green-900 border-green-200';
-      default:
-        return 'bg-gray-50 text-gray-900 border-gray-200';
-    }
-  };
-
-  const getMessageTypeName = (tipo: string | null) => {
-    switch (tipo) {
-      case 'ia':
-        return 'IA Pluggy';
-      case 'human':
-        return 'Atendente';
-      default:
-        return 'Sistema';
-    }
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -252,7 +221,19 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
           </div>
 
           {/* Mensagens */}
-          <ScrollArea className="h-96">
+          <div className="bg-gradient-to-b from-slate-50 to-white p-4 rounded-lg border border-slate-200">
+            <div className="flex items-center justify-center gap-4 mb-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="text-slate-600">Mensagens da IA</span>
+              </div>
+              <div className="w-px h-4 bg-slate-300"></div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                <span className="text-slate-600">Mensagens do Cliente</span>
+              </div>
+            </div>
+            <ScrollArea className="h-96">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-sm text-gray-500">Carregando histórico...</div>
@@ -262,46 +243,18 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
                 <div className="text-sm text-gray-500">Nenhuma conversa encontrada</div>
               </div>
             ) : (
-              <div className="space-y-3">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`p-4 rounded-lg border shadow-sm ${
-                      message.tipo_msg === 'ia' 
-                        ? 'bg-blue-50 border-blue-200 ml-8' 
-                        : 'bg-green-50 border-green-200 mr-8'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-full ${getMessageTypeColor(message.tipo_msg)}`}>
-                        {getMessageTypeIcon(message.tipo_msg)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="font-semibold text-sm text-gray-900">
-                            {message.tipo_msg === 'human' && message.nome ? message.nome : getMessageTypeName(message.tipo_msg)}
-                          </div>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${getMessageTypeColor(message.tipo_msg)}`}
-                          >
-                            {message.tipo_msg === 'ia' ? 'IA' : 'Humano'}
-                          </Badge>
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <Calendar className="h-3 w-3" />
-                            {formatDate(message.created_at)}
-                          </div>
-                        </div>
-                        <div className="text-sm text-gray-800 leading-relaxed">
-                          {message.mensagem || 'Mensagem vazia'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <div className="space-y-4">
+                {messages.map((message, index) => (
+                  <MessageBubble 
+                    key={message.id} 
+                    message={message} 
+                    formatDate={formatDate}
+                  />
                 ))}
               </div>
             )}
-          </ScrollArea>
+            </ScrollArea>
+          </div>
 
           {/* Validação da Conversa */}
           <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border">
@@ -399,20 +352,28 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
 
           {/* Estatísticas */}
           {messages.length > 0 && (
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-lg border">
+            <div className="bg-gradient-to-r from-slate-50 to-slate-100 p-4 rounded-lg border border-slate-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MessageCircle className="h-4 w-4 text-gray-600" />
-                  <span className="font-medium text-gray-800">Total de mensagens: {messages.length}</span>
+                  <MessageCircle className="h-4 w-4 text-slate-600" />
+                  <span className="font-semibold text-slate-800">Total de mensagens: {messages.length}</span>
                 </div>
-                <div className="flex gap-6">
+                <div className="flex gap-8">
                   <div className="flex items-center gap-2">
-                    <Bot className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm text-gray-700">IA: {messages.filter(m => m.tipo_msg === 'ia').length}</span>
+                    <div className="p-1.5 rounded-full bg-blue-100">
+                      <Bot className="h-3 w-3 text-blue-600" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700">
+                      IA: <span className="text-blue-600 font-semibold">{messages.filter(m => m.tipo_msg === 'ia').length}</span>
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-gray-700">Humano: {messages.filter(m => m.tipo_msg === 'human').length}</span>
+                    <div className="p-1.5 rounded-full bg-emerald-100">
+                      <User className="h-3 w-3 text-emerald-600" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700">
+                      Cliente: <span className="text-emerald-600 font-semibold">{messages.filter(m => m.tipo_msg === 'human').length}</span>
+                    </span>
                   </div>
                 </div>
               </div>

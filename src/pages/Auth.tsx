@@ -167,11 +167,6 @@ const Auth = () => {
           </Card>
         </Card>
 
-        <div className="text-center mt-6">
-          <p className="text-xs text-muted-foreground">
-            Admin padrão: admin@pluggy.com / admin1234
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -21,7 +21,9 @@ import { FilterBar } from "@/components/ui/filter-bar";
 import { NPSGauge } from "@/components/charts/nps-gauge";
 import { ValidationStatusChart } from "@/components/charts/validation-status-chart";
 import { PendingLeadsTable } from "@/components/tables/pending-leads-table";
-import { useDashboardData, useFilterOptions, DashboardFilters, formatQualificationTime } from "@/hooks/use-dashboard-data";
+import { useDashboardDataOptimized, useFilterOptions, DashboardFilters, formatQualificationTime } from "@/hooks/use-dashboard-data-optimized";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { DashboardLoadingSkeleton } from "@/components/ui/loading-skeleton";
 
 const Dashboard = () => {
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -33,10 +35,12 @@ const Dashboard = () => {
     followup: null,
     interaction: null,
     tamanho: null,
+    page: 1,
+    limit: 100, // Limite padrão de 100 registros por página
   });
   const [showUserManagement, setShowUserManagement] = useState(false);
 
-  const { data, loading, error } = useDashboardData(filters);
+  const { data, loading, error, refetch } = useDashboardDataOptimized(filters);
   const filterOptions = useFilterOptions();
   const { profile, signOut, isAdmin } = useAuth();
   const { toast } = useToast();
@@ -52,15 +56,12 @@ const Dashboard = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setFilters(prev => ({ ...prev, page }));
+  };
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-          <p className="text-muted-foreground">Carregando dashboard...</p>
-        </div>
-      </div>
-    );
+    return <DashboardLoadingSkeleton />;
   }
 
   if (error) {
@@ -194,6 +195,19 @@ const Dashboard = () => {
             <PendingLeadsTable 
               leads={data.pendingLeads}
             />
+
+            {/* Pagination Controls */}
+            {data.pagination && (
+              <PaginationControls
+                currentPage={data.pagination.currentPage}
+                totalPages={data.pagination.totalPages}
+                hasNextPage={data.pagination.hasNextPage}
+                hasPrevPage={data.pagination.hasPrevPage}
+                onPageChange={handlePageChange}
+                totalCount={data.pagination.totalCount}
+                limit={filters.limit || 100}
+              />
+            )}
           </>
         )}
       </div>
