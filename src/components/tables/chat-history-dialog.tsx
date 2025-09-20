@@ -244,13 +244,20 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
               </div>
             ) : (
               <div className="space-y-4">
-                {messages.map((message, index) => (
-                  <MessageBubble 
-                    key={message.id} 
-                    message={message} 
-                    formatDate={formatDate}
-                  />
-                ))}
+                {messages.map((message, index) => {
+                  // Encontrar o índice da primeira mensagem do cliente
+                  const firstClientMessageIndex = messages.findIndex(m => m.tipo_msg === 'human');
+                  const isFirstClientMessage = index === firstClientMessageIndex;
+                  
+                  return (
+                    <MessageBubble 
+                      key={message.id} 
+                      message={message} 
+                      formatDate={formatDate}
+                      isFirstClientMessage={isFirstClientMessage}
+                    />
+                  );
+                })}
               </div>
             )}
             </ScrollArea>
@@ -353,28 +360,10 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
           {/* Estatísticas */}
           {messages.length > 0 && (
             <div className="bg-gradient-to-r from-slate-50 to-slate-100 p-4 rounded-lg border border-slate-200">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-center">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="h-4 w-4 text-slate-600" />
                   <span className="font-semibold text-slate-800">Total de mensagens: {messages.length}</span>
-                </div>
-                <div className="flex gap-8">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-full bg-blue-100">
-                      <Bot className="h-3 w-3 text-blue-600" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">
-                      IA: <span className="text-blue-600 font-semibold">{messages.filter(m => m.tipo_msg === 'ia').length}</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-full bg-emerald-100">
-                      <User className="h-3 w-3 text-emerald-600" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Cliente: <span className="text-emerald-600 font-semibold">{messages.filter(m => m.tipo_msg === 'human').length}</span>
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>

@@ -13,11 +13,13 @@ interface MessageBubbleProps {
     created_at: string;
   };
   formatDate: (dateString: string) => string;
+  isFirstClientMessage?: boolean;
 }
 
-export function MessageBubble({ message, formatDate }: MessageBubbleProps) {
+export function MessageBubble({ message, formatDate, isFirstClientMessage = false }: MessageBubbleProps) {
   const isIA = message.tipo_msg === 'ia';
   const isHuman = message.tipo_msg === 'human';
+  const shouldHighlightAsClient = isHuman && isFirstClientMessage;
   
   const getMessageTypeIcon = (tipo: string | null) => {
     switch (tipo) {
@@ -35,7 +37,7 @@ export function MessageBubble({ message, formatDate }: MessageBubbleProps) {
       case 'ia':
         return 'IA Pluggy';
       case 'human':
-        return 'Cliente';
+        return shouldHighlightAsClient ? 'Cliente' : 'Usuário';
       default:
         return 'Sistema';
     }
@@ -49,7 +51,9 @@ export function MessageBubble({ message, formatDate }: MessageBubbleProps) {
             isIA 
               ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 text-blue-900' 
               : isHuman
-              ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-900'
+              ? shouldHighlightAsClient
+                ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 text-emerald-900'
+                : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 text-gray-900'
               : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 text-gray-900'
           }`}
         >
@@ -59,7 +63,9 @@ export function MessageBubble({ message, formatDate }: MessageBubbleProps) {
               isIA 
                 ? 'bg-blue-200 text-blue-800' 
                 : isHuman
-                ? 'bg-emerald-200 text-emerald-800'
+                ? shouldHighlightAsClient
+                  ? 'bg-emerald-200 text-emerald-800'
+                  : 'bg-gray-200 text-gray-800'
                 : 'bg-gray-200 text-gray-800'
             }`}>
               {getMessageTypeIcon(message.tipo_msg)}
@@ -74,11 +80,13 @@ export function MessageBubble({ message, formatDate }: MessageBubbleProps) {
                   isIA 
                     ? 'bg-blue-100 text-blue-700 border-blue-300' 
                     : isHuman
-                    ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                    ? shouldHighlightAsClient
+                      ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                      : 'bg-gray-100 text-gray-700 border-gray-300'
                     : 'bg-gray-100 text-gray-700 border-gray-300'
                 }`}
               >
-                {isIA ? 'IA' : isHuman ? 'Cliente' : 'Sistema'}
+                {isIA ? 'IA' : isHuman ? (shouldHighlightAsClient ? 'Cliente' : 'Usuário') : 'Sistema'}
               </Badge>
             </div>
             <div className="flex items-center gap-1 text-xs opacity-70 ml-auto">
