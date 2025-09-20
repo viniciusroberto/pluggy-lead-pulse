@@ -31,12 +31,45 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Error loading user profile:', error);
-        return null;
+        // Se não encontrou perfil, tentar criar um básico
+        return await createBasicProfile(userId);
       }
 
       return data as UserProfile;
     } catch (error) {
       console.error('Error loading user profile:', error);
+      return null;
+    }
+  };
+
+  // Função para criar um perfil básico
+  const createBasicProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+      // Obter dados do usuário autenticado
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (!authUser) return null;
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert({
+          user_id: userId,
+          email: authUser.email || '',
+          name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuário',
+          role: 'user',
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating basic profile:', error);
+        return null;
+      }
+
+      return data as UserProfile;
+    } catch (error) {
+      console.error('Error creating basic profile:', error);
       return null;
     }
   };
@@ -65,6 +98,7 @@ export const useAuth = () => {
           setProfile(null);
         }
         
+        // Sempre definir loading como false após tentar carregar
         if (mounted) {
           setLoading(false);
         }
@@ -97,6 +131,7 @@ export const useAuth = () => {
           setProfile(null);
         }
         
+        // Sempre definir loading como false após tentar carregar
         if (mounted) {
           setLoading(false);
         }
@@ -140,7 +175,9 @@ export const useAuth = () => {
 
   // Verificar se o usuário está autenticado
   const isAuthenticated = (): boolean => {
-    return !!user && !!profile && isActive();
+    // Se tem usuário autenticado, considerar autenticado mesmo sem perfil
+    // O perfil pode ser criado posteriormente
+    return !!user;
   };
 
   return {

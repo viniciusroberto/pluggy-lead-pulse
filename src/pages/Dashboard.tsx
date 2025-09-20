@@ -91,7 +91,8 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <BarChart3 className="h-8 w-8 text-primary" />
               Dashboard Executivo
             </h1>
             <p className="text-muted-foreground">

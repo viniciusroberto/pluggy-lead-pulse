@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, LogIn, AlertCircle } from "lucide-react";
+import { Loader2, LogIn, AlertCircle, BarChart3 } from "lucide-react";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -92,7 +92,8 @@ const Auth = () => {
       
       <div className="relative w-full max-w-md p-6">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-3">
+            <BarChart3 className="h-8 w-8 text-primary" />
             Dashboard Pluggy
           </h1>
           <p className="text-muted-foreground">
