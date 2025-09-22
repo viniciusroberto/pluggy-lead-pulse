@@ -10,6 +10,20 @@ export default defineConfig(({ mode }) => ({
     strictPort: false,
     open: true,
   },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+        },
+      },
+    },
+  },
   plugins: [react()],
   resolve: {
     alias: {

@@ -114,6 +114,7 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
     }
 
     try {
+      console.log('Iniciando validação para telefone:', lead.telefone);
       // Primeiro, verificar se já existe um registro
       const { data: existingValidation } = await supabase
         .from('conversa_validacao')
@@ -152,9 +153,11 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
       }
 
       if (error) {
+        console.error('Erro específico na validação:', error);
         throw error;
       }
 
+      console.log('Validação salva com sucesso');
       setValidationStatus(prev => ({
         ...prev,
         validada,
@@ -170,9 +173,16 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
       setShowObservations(false);
     } catch (error) {
       console.error('Erro ao salvar validação:', error);
+      console.error('Detalhes do erro:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        stack: error instanceof Error ? error.stack : undefined,
+        telefone: lead.telefone,
+        userId: user?.id
+      });
+      
       toast({
         title: "Erro",
-        description: "Erro ao salvar validação",
+        description: `Erro ao salvar validação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive"
       });
     }
