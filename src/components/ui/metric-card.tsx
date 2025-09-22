@@ -19,8 +19,9 @@ export function MetricCard({
   change, 
   icon, 
   variant = "default",
-  className 
-}: MetricCardProps) {
+  className,
+  hideContent = false
+}: MetricCardProps & { hideContent?: boolean }) {
   const variants = {
     default: "bg-gradient-primary",
     success: "bg-gradient-success", 
@@ -48,15 +49,17 @@ export function MetricCard({
       className
     )}>
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-3xl font-bold text-card-foreground">{value}</p>
-          {change && (
-            <p className={cn("text-sm font-medium", getChangeColor(change.value))}>
-              {change.value > 0 ? "+" : ""}{change.value}{change.percentage ? "%" : ""}
-            </p>
-          )}
-        </div>
+        {!hideContent && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-3xl font-bold text-card-foreground">{value}</p>
+            {change && (
+              <p className={cn("text-sm font-medium", getChangeColor(change.value))}>
+                {change.value > 0 ? "+" : ""}{change.value}{change.percentage ? "%" : ""}
+              </p>
+            )}
+          </div>
+        )}
         {icon && (
           <div className={cn(
             "rounded-xl p-3 shadow-glow backdrop-blur-sm",

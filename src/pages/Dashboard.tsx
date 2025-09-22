@@ -182,6 +182,7 @@ const Dashboard = () => {
             title="Tempo Médio Qualificação"
             value={formatQualificationTime(data.avgQualificationTime)}
             icon={<Clock className="h-6 w-6" />}
+            hideContent={true}
           />
           <ValidationStatusChart data={data.validationStatusData} />
           <NPSGauge

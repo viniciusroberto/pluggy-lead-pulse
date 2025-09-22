@@ -31,8 +31,8 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Error loading user profile:', error);
-        // Se não encontrou perfil, tentar criar um básico
-        return await createBasicProfile(userId);
+        // Se não encontrou perfil, retornar null (não tentar criar automaticamente)
+        return null;
       }
 
       return data as UserProfile;
@@ -79,6 +79,14 @@ export const useAuth = () => {
 
     const initializeAuth = async () => {
       try {
+        // Timeout de segurança para evitar loading infinito
+        const timeoutId = setTimeout(() => {
+          if (mounted) {
+            console.warn('Auth initialization timeout - forcing loading to false');
+            setLoading(false);
+          }
+        }, 10000); // 10 segundos
+
         // Obter sessão atual
         const { data: { session } } = await supabase.auth.getSession();
         
@@ -98,7 +106,8 @@ export const useAuth = () => {
           setProfile(null);
         }
         
-        // Sempre definir loading como false após tentar carregar
+        // Limpar timeout e definir loading como false
+        clearTimeout(timeoutId);
         if (mounted) {
           setLoading(false);
         }

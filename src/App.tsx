@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthDebug } from "@/components/debug/AuthDebug";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <AuthDebug />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

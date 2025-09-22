@@ -224,12 +224,12 @@ export function ChatHistoryDialog({ isOpen, onClose, lead }: ChatHistoryDialogPr
           <div className="bg-gradient-to-b from-slate-50 to-white p-4 rounded-lg border border-slate-200">
             <div className="flex items-center justify-center gap-4 mb-4 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-slate-600">Mensagens da IA</span>
+                <div className="w-3 h-3 rounded-full bg-sky-500"></div>
+                <span className="text-slate-600">Mensagens da Lia</span>
               </div>
               <div className="w-px h-4 bg-slate-300"></div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
                 <span className="text-slate-600">Mensagens do Cliente</span>
               </div>
             </div>
