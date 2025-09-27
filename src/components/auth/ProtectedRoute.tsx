@@ -17,6 +17,12 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
 
   // Error state - mostrar fallback para problemas de autenticação
   if (error && retryCount > 0) {
+    // Se for timeout, permitir acesso básico
+    if (error.includes('Timeout')) {
+      console.log('Timeout detectado, permitindo acesso básico');
+      return <>{children}</>;
+    }
+    
     return (
       <AuthFallback 
         onRetry={retry}

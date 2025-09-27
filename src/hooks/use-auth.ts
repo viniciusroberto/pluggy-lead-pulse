@@ -91,8 +91,9 @@ export const useAuth = () => {
             console.warn('Auth initialization timeout - forcing loading to false');
             setError('Timeout na inicialização da autenticação');
             setLoading(false);
+            setIsInitialized(true);
           }
-        }, 8000); // Aumentado para 8 segundos para dar mais tempo
+        }, 3000); // Reduzido para 3 segundos
 
         // Verificar se há problemas com localStorage
         try {
@@ -146,17 +147,18 @@ export const useAuth = () => {
               setProfile(null);
             } else {
               console.log('Carregando perfil para usuário:', session.user.id);
-              // Carregar perfil do usuário com timeout
-              const profilePromise = loadUserProfile(session.user.id);
-              const timeoutPromise = new Promise<null>((_, reject) => 
-                setTimeout(() => reject(new Error('Timeout ao carregar perfil')), 4000)
-              );
-              
-              const profileData = await Promise.race([profilePromise, timeoutPromise]);
-              
-              if (mounted) {
-                console.log('Perfil carregado:', profileData ? 'Sim' : 'Não');
-                setProfile(profileData);
+              // Tentar carregar perfil, mas não bloquear se falhar
+              try {
+                const profileData = await loadUserProfile(session.user.id);
+                if (mounted) {
+                  console.log('Perfil carregado:', profileData ? 'Sim' : 'Não');
+                  setProfile(profileData);
+                }
+              } catch (profileError) {
+                console.warn('Erro ao carregar perfil, continuando sem perfil:', profileError);
+                if (mounted) {
+                  setProfile(null);
+                }
               }
             }
           } else {
@@ -202,21 +204,15 @@ export const useAuth = () => {
 
         if (session?.user) {
           try {
-            // Carregar perfil do usuário com timeout
-            const profilePromise = loadUserProfile(session.user.id);
-            const timeoutPromise = new Promise<null>((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout ao carregar perfil')), 4000)
-            );
-            
-            const profileData = await Promise.race([profilePromise, timeoutPromise]);
-            
+            // Tentar carregar perfil, mas não bloquear se falhar
+            const profileData = await loadUserProfile(session.user.id);
             if (mounted) {
               setProfile(profileData);
             }
           } catch (error) {
-            console.error('Erro ao carregar perfil no listener:', error);
+            console.warn('Erro ao carregar perfil no listener, continuando sem perfil:', error);
             if (mounted) {
-              setError(error instanceof Error ? error.message : 'Erro ao carregar perfil');
+              setProfile(null);
             }
           }
         } else {
