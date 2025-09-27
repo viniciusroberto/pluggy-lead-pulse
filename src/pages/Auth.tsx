@@ -68,7 +68,11 @@ const Auth = () => {
           description: "Bem-vindo ao Dashboard Pluggy",
         });
         
-        navigate("/dashboard");
+        // Aguardar um pouco para o sistema de autenticação se estabilizar
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1000);
+        
         setLoading(false);
       }
     } catch (error: any) {

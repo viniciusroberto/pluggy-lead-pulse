@@ -129,6 +129,7 @@ export const useAuth = () => {
           setError(`Erro de sessão: ${sessionError.message}`);
           setRetryCount(prev => prev + 1);
         } else {
+          console.log('Sessão obtida com sucesso:', session?.user?.id);
           setSession(session);
           setUser(session?.user ?? null);
           setRetryCount(0); // Reset retry count on success
@@ -143,6 +144,7 @@ export const useAuth = () => {
               setUser(null);
               setProfile(null);
             } else {
+              console.log('Carregando perfil para usuário:', session.user.id);
               // Carregar perfil do usuário com timeout
               const profilePromise = loadUserProfile(session.user.id);
               const timeoutPromise = new Promise<null>((_, reject) => 
@@ -152,10 +154,12 @@ export const useAuth = () => {
               const profileData = await Promise.race([profilePromise, timeoutPromise]);
               
               if (mounted) {
+                console.log('Perfil carregado:', profileData ? 'Sim' : 'Não');
                 setProfile(profileData);
               }
             }
           } else {
+            console.log('Nenhum usuário na sessão');
             setProfile(null);
           }
         }
@@ -183,6 +187,12 @@ export const useAuth = () => {
         
         console.log('Auth state change:', event, session?.user?.id);
         
+        // Ignorar eventos de inicialização para evitar conflitos
+        if (event === 'INITIAL_SESSION') {
+          console.log('Ignorando evento INITIAL_SESSION no listener');
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         setError(null);
@@ -192,7 +202,7 @@ export const useAuth = () => {
             // Carregar perfil do usuário com timeout
             const profilePromise = loadUserProfile(session.user.id);
             const timeoutPromise = new Promise<null>((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout ao carregar perfil')), 5000)
+              setTimeout(() => reject(new Error('Timeout ao carregar perfil')), 4000)
             );
             
             const profileData = await Promise.race([profilePromise, timeoutPromise]);

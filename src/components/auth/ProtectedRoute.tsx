@@ -47,6 +47,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   if (user && !profile) {
     // Se não requer admin, permitir acesso mesmo sem perfil
     if (!requireAdmin) {
+      console.log('Usuário autenticado sem perfil - permitindo acesso básico');
       return <>{children}</>;
     }
     
