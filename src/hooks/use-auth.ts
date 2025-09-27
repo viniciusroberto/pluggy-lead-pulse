@@ -21,6 +21,7 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Função para carregar o perfil do usuário
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -91,7 +92,7 @@ export const useAuth = () => {
             setError('Timeout na inicialização da autenticação');
             setLoading(false);
           }
-        }, 6000); // Reduzido para 6 segundos
+        }, 8000); // Aumentado para 8 segundos para dar mais tempo
 
         // Verificar se há problemas com localStorage
         try {
@@ -168,12 +169,14 @@ export const useAuth = () => {
         clearTimeout(timeoutId);
         if (mounted) {
           setLoading(false);
+          setIsInitialized(true);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
           setError(error instanceof Error ? error.message : 'Erro desconhecido');
           setLoading(false);
+          setIsInitialized(true);
         }
       }
     };
@@ -223,6 +226,7 @@ export const useAuth = () => {
         // Sempre definir loading como false após tentar carregar
         if (mounted) {
           setLoading(false);
+          setIsInitialized(true);
         }
       }
     );
@@ -276,6 +280,7 @@ export const useAuth = () => {
     loading,
     error,
     retryCount,
+    isInitialized,
     signOut,
     isAdmin,
     isActive,
@@ -285,9 +290,13 @@ export const useAuth = () => {
       setRetryCount(0);
       setError(null);
       setLoading(true);
+      setIsInitialized(false);
       // Trigger re-initialization
       if (user) {
-        loadUserProfile(user.id).then(setProfile).finally(() => setLoading(false));
+        loadUserProfile(user.id).then(setProfile).finally(() => {
+          setLoading(false);
+          setIsInitialized(true);
+        });
       }
     }
   };

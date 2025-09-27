@@ -11,7 +11,9 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, profile, loading, error, retryCount, isAdmin, isActive, isAuthenticated, refreshProfile, retry } = useAuth();
+  const { user, profile, loading, error, retryCount, isInitialized, isAdmin, isActive, isAuthenticated, refreshProfile, retry } = useAuth();
+
+  console.log('ProtectedRoute - user:', user?.id, 'loading:', loading, 'initialized:', isInitialized, 'error:', error);
 
   // Error state - mostrar fallback para problemas de autenticação
   if (error && retryCount > 0) {
@@ -23,8 +25,8 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  // Loading state
-  if (loading) {
+  // Loading state - aguardar mais tempo para evitar redirecionamentos prematuros
+  if (loading || !isInitialized) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -38,8 +40,9 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  // Usuário não autenticado
-  if (!user) {
+  // Usuário não autenticado - só redirecionar após inicialização completa
+  if (!user && isInitialized) {
+    console.log('Usuário não autenticado, redirecionando para /auth');
     return <Navigate to="/auth" replace />;
   }
 

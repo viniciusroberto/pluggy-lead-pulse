@@ -19,12 +19,27 @@ const Auth = () => {
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Erro ao verificar sessão:', error);
+          return;
+        }
+        
+        if (session?.user) {
+          console.log('Usuário já logado, redirecionando para dashboard');
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error('Erro ao verificar usuário logado:', error);
       }
     };
-    checkUser();
+    
+    // Aguardar um pouco para evitar conflitos com o useAuth hook
+    const timeoutId = setTimeout(checkUser, 500);
+    
+    return () => clearTimeout(timeoutId);
   }, [navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
