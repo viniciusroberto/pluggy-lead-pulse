@@ -8,7 +8,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "validate:auth": "node scripts/validate-auth.js",
+    "test:production": "node scripts/test-production.js",
+    "test:all": "npm run validate:auth && npm run test:production"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

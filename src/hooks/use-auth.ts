@@ -19,6 +19,8 @@ export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Função para carregar o perfil do usuário
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -76,34 +78,86 @@ export const useAuth = () => {
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       try {
+        setError(null);
+        
         // Timeout de segurança para evitar loading infinito
-        const timeoutId = setTimeout(() => {
+        timeoutId = setTimeout(() => {
           if (mounted) {
             console.warn('Auth initialization timeout - forcing loading to false');
+            setError('Timeout na inicialização da autenticação');
             setLoading(false);
           }
-        }, 10000); // 10 segundos
+        }, 6000); // Reduzido para 6 segundos
 
-        // Obter sessão atual
-        const { data: { session } } = await supabase.auth.getSession();
+        // Verificar se há problemas com localStorage
+        try {
+          const testKey = 'supabase-auth-test';
+          localStorage.setItem(testKey, 'test');
+          localStorage.removeItem(testKey);
+        } catch (storageError) {
+          console.warn('Problema com localStorage detectado:', storageError);
+          setError('Problema com armazenamento local. Tente limpar os dados do navegador.');
+          setLoading(false);
+          return;
+        }
+
+        // Obter sessão atual com retry
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (!mounted) return;
 
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          // Carregar perfil do usuário
-          const profileData = await loadUserProfile(session.user.id);
+        if (sessionError) {
+          console.error('Erro ao obter sessão:', sessionError);
           
-          if (mounted) {
-            setProfile(profileData);
+          // Se for erro de sessão inválida, limpar localStorage
+          if (sessionError.message.includes('Invalid') || sessionError.message.includes('expired')) {
+            console.warn('Sessão inválida detectada, limpando localStorage...');
+            try {
+              const keys = Object.keys(localStorage);
+              keys.filter(key => key.includes('supabase')).forEach(key => {
+                localStorage.removeItem(key);
+              });
+            } catch (clearError) {
+              console.warn('Erro ao limpar localStorage:', clearError);
+            }
           }
+          
+          setError(`Erro de sessão: ${sessionError.message}`);
+          setRetryCount(prev => prev + 1);
         } else {
-          setProfile(null);
+          setSession(session);
+          setUser(session?.user ?? null);
+          setRetryCount(0); // Reset retry count on success
+
+          if (session?.user) {
+            // Verificar se o token não está expirado
+            const now = Math.floor(Date.now() / 1000);
+            if (session.expires_at && session.expires_at < now) {
+              console.warn('Token expirado detectado, fazendo logout...');
+              await supabase.auth.signOut();
+              setSession(null);
+              setUser(null);
+              setProfile(null);
+            } else {
+              // Carregar perfil do usuário com timeout
+              const profilePromise = loadUserProfile(session.user.id);
+              const timeoutPromise = new Promise<null>((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout ao carregar perfil')), 4000)
+              );
+              
+              const profileData = await Promise.race([profilePromise, timeoutPromise]);
+              
+              if (mounted) {
+                setProfile(profileData);
+              }
+            }
+          } else {
+            setProfile(null);
+          }
         }
         
         // Limpar timeout e definir loading como false
@@ -114,6 +168,7 @@ export const useAuth = () => {
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
+          setError(error instanceof Error ? error.message : 'Erro desconhecido');
           setLoading(false);
         }
       }
@@ -126,15 +181,30 @@ export const useAuth = () => {
       async (event, session) => {
         if (!mounted) return;
         
+        console.log('Auth state change:', event, session?.user?.id);
+        
         setSession(session);
         setUser(session?.user ?? null);
+        setError(null);
 
         if (session?.user) {
-          // Carregar perfil do usuário
-          const profileData = await loadUserProfile(session.user.id);
-          
-          if (mounted) {
-            setProfile(profileData);
+          try {
+            // Carregar perfil do usuário com timeout
+            const profilePromise = loadUserProfile(session.user.id);
+            const timeoutPromise = new Promise<null>((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout ao carregar perfil')), 5000)
+            );
+            
+            const profileData = await Promise.race([profilePromise, timeoutPromise]);
+            
+            if (mounted) {
+              setProfile(profileData);
+            }
+          } catch (error) {
+            console.error('Erro ao carregar perfil no listener:', error);
+            if (mounted) {
+              setError(error instanceof Error ? error.message : 'Erro ao carregar perfil');
+            }
           }
         } else {
           setProfile(null);
@@ -194,10 +264,21 @@ export const useAuth = () => {
     session,
     profile,
     loading,
+    error,
+    retryCount,
     signOut,
     isAdmin,
     isActive,
     isAuthenticated,
     refreshProfile,
+    retry: () => {
+      setRetryCount(0);
+      setError(null);
+      setLoading(true);
+      // Trigger re-initialization
+      if (user) {
+        loadUserProfile(user.id).then(setProfile).finally(() => setLoading(false));
+      }
+    }
   };
 };

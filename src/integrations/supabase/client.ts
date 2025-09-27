@@ -7,10 +7,41 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Função para limpar localStorage corrompido
+const clearCorruptedAuth = () => {
+  try {
+    const keys = Object.keys(localStorage);
+    const authKeys = keys.filter(key => key.includes('supabase') || key.includes('auth'));
+    
+    authKeys.forEach(key => {
+      try {
+        const value = localStorage.getItem(key);
+        if (value) {
+          JSON.parse(value); // Testa se é JSON válido
+        }
+      } catch (error) {
+        console.warn(`Removendo chave corrompida do localStorage: ${key}`);
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.warn('Erro ao limpar localStorage corrompido:', error);
+    // Em caso de erro, limpar todas as chaves do Supabase
+    const keys = Object.keys(localStorage);
+    keys.filter(key => key.includes('supabase')).forEach(key => {
+      localStorage.removeItem(key);
+    });
+  }
+};
+
+// Limpar localStorage corrompido antes de criar o cliente
+clearCorruptedAuth();
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
   }
 });

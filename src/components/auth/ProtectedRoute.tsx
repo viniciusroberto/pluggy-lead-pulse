@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthFallback } from "@/components/AuthFallback";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,7 +11,17 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, profile, loading, isAdmin, isActive, isAuthenticated, refreshProfile } = useAuth();
+  const { user, profile, loading, error, retryCount, isAdmin, isActive, isAuthenticated, refreshProfile, retry } = useAuth();
+
+  // Error state - mostrar fallback para problemas de autenticação
+  if (error && retryCount > 0) {
+    return (
+      <AuthFallback 
+        onRetry={retry}
+        onForceLogout={() => window.location.href = '/auth'}
+      />
+    );
+  }
 
   // Loading state
   if (loading) {
@@ -19,6 +30,9 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
           <p className="text-muted-foreground">Verificando autenticação...</p>
+          {error && (
+            <p className="text-sm text-red-600">Erro: {error}</p>
+          )}
         </div>
       </div>
     );
