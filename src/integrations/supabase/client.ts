@@ -4,8 +4,6 @@ import type { Database } from './types';
 
 const SUPABASE_URL = "https://qgihoqydtgtsulijrmeg.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFnaWhvcXlkdGd0c3VsaWpybWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2Njc3MTYsImV4cCI6MjA2OTI0MzcxNn0.2nMRoyjA6b8TeJTVuqkdfI2G6LLWZ9sxTVA9ChaTcb4";
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
 
 // Função para limpar localStorage corrompido
 const clearCorruptedAuth = () => {
@@ -37,11 +35,36 @@ const clearCorruptedAuth = () => {
 // Limpar localStorage corrompido antes de criar o cliente
 clearCorruptedAuth();
 
+// Configuração mais robusta do cliente Supabase
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    storage: {
+      getItem: (key: string) => {
+        try {
+          return localStorage.getItem(key);
+        } catch (error) {
+          console.warn('Erro ao acessar localStorage:', error);
+          return null;
+        }
+      },
+      setItem: (key: string, value: string) => {
+        try {
+          localStorage.setItem(key, value);
+        } catch (error) {
+          console.warn('Erro ao salvar no localStorage:', error);
+        }
+      },
+      removeItem: (key: string) => {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          console.warn('Erro ao remover do localStorage:', error);
+        }
+      }
+    },
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    flowType: 'pkce'
   }
 });

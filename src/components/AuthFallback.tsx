@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
@@ -11,11 +11,9 @@ interface AuthFallbackProps {
 
 export function AuthFallback({ onRetry, onForceLogout }: AuthFallbackProps) {
   const [isRetrying, setIsRetrying] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
   const handleRetry = async () => {
     setIsRetrying(true);
-    setRetryCount(prev => prev + 1);
     
     try {
       // Tentar obter sessão novamente
@@ -41,12 +39,10 @@ export function AuthFallback({ onRetry, onForceLogout }: AuthFallbackProps) {
   const handleForceLogout = async () => {
     try {
       await supabase.auth.signOut();
-      onForceLogout();
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      // Mesmo com erro, redirecionar para login
-      onForceLogout();
     }
+    onForceLogout();
   };
 
   const handleClearStorage = async () => {
@@ -70,18 +66,15 @@ export function AuthFallback({ onRetry, onForceLogout }: AuthFallbackProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
             <AlertCircle className="h-6 w-6 text-yellow-600" />
           </div>
-          <CardTitle className="text-xl">Problema de Autenticação</CardTitle>
+          <CardTitle className="text-xl">Problema de Conexão</CardTitle>
           <CardDescription>
-            {retryCount === 0 
-              ? "Estamos verificando sua sessão..."
-              : `Tentativa ${retryCount} de reconexão falhou.`
-            }
+            Não foi possível verificar sua autenticação. Tente novamente.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -94,7 +87,7 @@ export function AuthFallback({ onRetry, onForceLogout }: AuthFallbackProps) {
               {isRetrying ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Reconectando...
+                  Tentando...
                 </>
               ) : (
                 <>
@@ -112,23 +105,13 @@ export function AuthFallback({ onRetry, onForceLogout }: AuthFallbackProps) {
             </Button>
           </div>
           
-          {retryCount > 1 && (
-            <Button 
-              onClick={handleClearStorage} 
-              variant="destructive"
-              className="w-full"
-            >
-              Limpar Dados e Recarregar
-            </Button>
-          )}
-          
-          {retryCount > 2 && (
-            <div className="rounded-md bg-blue-50 p-3">
-              <p className="text-sm text-blue-800">
-                Se o problema persistir, tente limpar os dados do navegador ou usar uma aba anônima.
-              </p>
-            </div>
-          )}
+          <Button 
+            onClick={handleClearStorage} 
+            variant="destructive"
+            className="w-full"
+          >
+            Limpar Dados e Recarregar
+          </Button>
         </CardContent>
       </Card>
     </div>

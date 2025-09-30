@@ -11,18 +11,30 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, profile, loading, error, retryCount, isInitialized, isAdmin, isActive, isAuthenticated, refreshProfile, retry } = useAuth();
+  const { user, profile, loading, error, isInitialized, isAdmin, isActive, isAuthenticated, refreshProfile, retry } = useAuth();
 
   console.log('ProtectedRoute - user:', user?.id, 'loading:', loading, 'initialized:', isInitialized, 'error:', error);
 
-  // Error state - mostrar fallback para problemas de autenticação
-  if (error && retryCount > 0) {
-    // Se for timeout, permitir acesso básico
-    if (error.includes('Timeout')) {
-      console.log('Timeout detectado, permitindo acesso básico');
+  // Loading state - mostrar loading apenas se ainda não foi inicializado
+  if (loading && !isInitialized) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se houve erro de inicialização, permitir acesso básico para evitar bloqueio
+  if (error && isInitialized) {
+    console.warn('Erro de autenticação detectado, mas permitindo acesso:', error);
+    // Se tem usuário, permitir acesso mesmo com erro
+    if (user) {
       return <>{children}</>;
     }
-    
+    // Se não tem usuário e há erro, mostrar fallback
     return (
       <AuthFallback 
         onRetry={retry}
@@ -31,22 +43,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  // Loading state - aguardar mais tempo para evitar redirecionamentos prematuros
-  if (loading || !isInitialized) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-          <p className="text-muted-foreground">Verificando autenticação...</p>
-          {error && (
-            <p className="text-sm text-red-600">Erro: {error}</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Usuário não autenticado - só redirecionar após inicialização completa
+  // Usuário não autenticado - redirecionar para login
   if (!user && isInitialized) {
     console.log('Usuário não autenticado, redirecionando para /auth');
     return <Navigate to="/auth" replace />;

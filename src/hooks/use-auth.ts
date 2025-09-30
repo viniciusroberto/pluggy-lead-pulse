@@ -20,7 +20,6 @@ export const useAuth = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Função para carregar o perfil do usuário
@@ -79,110 +78,55 @@ export const useAuth = () => {
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       try {
         setError(null);
+        setLoading(true);
         
-        // Timeout de segurança para evitar loading infinito
-        timeoutId = setTimeout(() => {
-          if (mounted) {
-            console.warn('Auth initialization timeout - forcing loading to false');
-            setError('Timeout na inicialização da autenticação');
-            setLoading(false);
-            setIsInitialized(true);
-          }
-        }, 3000); // Reduzido para 3 segundos
-
-        // Verificar se há problemas com localStorage
-        try {
-          const testKey = 'supabase-auth-test';
-          localStorage.setItem(testKey, 'test');
-          localStorage.removeItem(testKey);
-        } catch (storageError) {
-          console.warn('Problema com localStorage detectado:', storageError);
-          setError('Problema com armazenamento local. Tente limpar os dados do navegador.');
-          setLoading(false);
-          return;
-        }
-
-        // Obter sessão atual com retry
+        // Obter sessão atual
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (!mounted) return;
 
         if (sessionError) {
           console.error('Erro ao obter sessão:', sessionError);
-          
-          // Se for erro de sessão inválida, limpar localStorage
-          if (sessionError.message.includes('Invalid') || sessionError.message.includes('expired')) {
-            console.warn('Sessão inválida detectada, limpando localStorage...');
-            try {
-              const keys = Object.keys(localStorage);
-              keys.filter(key => key.includes('supabase')).forEach(key => {
-                localStorage.removeItem(key);
-              });
-            } catch (clearError) {
-              console.warn('Erro ao limpar localStorage:', clearError);
-            }
-          }
-          
           setError(`Erro de sessão: ${sessionError.message}`);
-          setRetryCount(prev => prev + 1);
         } else {
-          console.log('Sessão obtida com sucesso:', session?.user?.id);
+          console.log('Sessão obtida:', session?.user?.id || 'Nenhum usuário');
           setSession(session);
           setUser(session?.user ?? null);
-          setRetryCount(0); // Reset retry count on success
 
           if (session?.user) {
-            // Verificar se o token não está expirado
-            const now = Math.floor(Date.now() / 1000);
-            if (session.expires_at && session.expires_at < now) {
-              console.warn('Token expirado detectado, fazendo logout...');
-              await supabase.auth.signOut();
-              setSession(null);
-              setUser(null);
-              setProfile(null);
-            } else {
-              console.log('Carregando perfil para usuário:', session.user.id);
-              // Tentar carregar perfil, mas não bloquear se falhar
-              try {
-                const profileData = await loadUserProfile(session.user.id);
-                if (mounted) {
-                  console.log('Perfil carregado:', profileData ? 'Sim' : 'Não');
-                  setProfile(profileData);
-                }
-              } catch (profileError) {
-                console.warn('Erro ao carregar perfil, continuando sem perfil:', profileError);
-                if (mounted) {
-                  setProfile(null);
-                }
+            // Carregar perfil de forma assíncrona, sem bloquear
+            loadUserProfile(session.user.id).then(profileData => {
+              if (mounted) {
+                setProfile(profileData);
               }
-            }
+            }).catch(error => {
+              console.warn('Erro ao carregar perfil:', error);
+              if (mounted) {
+                setProfile(null);
+              }
+            });
           } else {
-            console.log('Nenhum usuário na sessão');
             setProfile(null);
           }
-        }
-        
-        // Limpar timeout e definir loading como false
-        clearTimeout(timeoutId);
-        if (mounted) {
-          setLoading(false);
-          setIsInitialized(true);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
           setError(error instanceof Error ? error.message : 'Erro desconhecido');
+        }
+      } finally {
+        if (mounted) {
           setLoading(false);
           setIsInitialized(true);
         }
       }
     };
 
+    // Inicializar imediatamente
     initializeAuth();
 
     // Configurar listener de mudanças de autenticação
@@ -192,34 +136,26 @@ export const useAuth = () => {
         
         console.log('Auth state change:', event, session?.user?.id);
         
-        // Ignorar eventos de inicialização para evitar conflitos
-        if (event === 'INITIAL_SESSION') {
-          console.log('Ignorando evento INITIAL_SESSION no listener');
-          return;
-        }
-        
         setSession(session);
         setUser(session?.user ?? null);
         setError(null);
 
         if (session?.user) {
-          try {
-            // Tentar carregar perfil, mas não bloquear se falhar
-            const profileData = await loadUserProfile(session.user.id);
+          // Carregar perfil de forma assíncrona
+          loadUserProfile(session.user.id).then(profileData => {
             if (mounted) {
               setProfile(profileData);
             }
-          } catch (error) {
-            console.warn('Erro ao carregar perfil no listener, continuando sem perfil:', error);
+          }).catch(error => {
+            console.warn('Erro ao carregar perfil no listener:', error);
             if (mounted) {
               setProfile(null);
             }
-          }
+          });
         } else {
           setProfile(null);
         }
         
-        // Sempre definir loading como false após tentar carregar
         if (mounted) {
           setLoading(false);
           setIsInitialized(true);
@@ -275,7 +211,7 @@ export const useAuth = () => {
     profile,
     loading,
     error,
-    retryCount,
+    retryCount: 0, // Mantido para compatibilidade
     isInitialized,
     signOut,
     isAdmin,
@@ -283,7 +219,6 @@ export const useAuth = () => {
     isAuthenticated,
     refreshProfile,
     retry: () => {
-      setRetryCount(0);
       setError(null);
       setLoading(true);
       setIsInitialized(false);

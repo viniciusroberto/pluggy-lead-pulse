@@ -44,13 +44,13 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
                 <AlertTriangle className="h-6 w-6 text-red-600" />
               </div>
-              <CardTitle className="text-xl">Algo deu errado</CardTitle>
+              <CardTitle className="text-xl">Erro na Aplicação</CardTitle>
               <CardDescription>
                 Ocorreu um erro inesperado. Tente recarregar a página.
               </CardDescription>
@@ -61,6 +61,14 @@ export class ErrorBoundary extends Component<Props, State> {
                   <p className="text-sm text-red-800 font-mono">
                     {this.state.error.message}
                   </p>
+                  {this.state.errorInfo && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs">Stack Trace</summary>
+                      <pre className="text-xs mt-1 overflow-auto">
+                        {this.state.errorInfo.componentStack}
+                      </pre>
+                    </details>
+                  )}
                 </div>
               )}
               <div className="flex gap-2">
